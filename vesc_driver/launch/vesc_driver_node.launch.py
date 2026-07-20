@@ -30,9 +30,30 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+
+
+def launch_setup(context, *args, **kwargs):
+    port_val = LaunchConfiguration("port").perform(context)
+    config_val = LaunchConfiguration("config").perform(context)
+    node_name_val = LaunchConfiguration("node_name").perform(context)
+    namespace_val = LaunchConfiguration("namespace").perform(context)
+
+    params = [config_val]
+    if port_val:
+        params.append({"port": port_val})
+
+    node = Node(
+        package="vesc_driver",
+        executable="vesc_driver_node",
+        name=node_name_val,
+        namespace=namespace_val,
+        parameters=params,
+        output="screen"
+    )
+    return [node]
 
 
 def generate_launch_description():
@@ -48,11 +69,20 @@ def generate_launch_description():
             default_value=vesc_config,
             description="VESC yaml configuration file.",
             ),
-        Node(
-            package='vesc_driver',
-            executable='vesc_driver_node',
-            name='vesc_driver_node',
-            parameters=[LaunchConfiguration("config")]
-        ),
-
+        DeclareLaunchArgument(
+            name="port",
+            default_value="",
+            description="VESC serial port override. If empty, uses the port from the config file.",
+            ),
+        DeclareLaunchArgument(
+            name="node_name",
+            default_value="vesc_driver_node",
+            description="Name of the VESC/FESC driver node.",
+            ),
+        DeclareLaunchArgument(
+            name="namespace",
+            default_value="",
+            description="Namespace of the node.",
+            ),
+        OpaqueFunction(function=launch_setup)
     ])

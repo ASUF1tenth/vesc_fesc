@@ -49,6 +49,13 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+# Install python scripts as executables
+install(PROGRAMS
+  scripts/vesc_fesc_bridge.py
+  scripts/vesc_device_lookup
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_auto_package(
   INSTALL_TO_SHARE
     launch
